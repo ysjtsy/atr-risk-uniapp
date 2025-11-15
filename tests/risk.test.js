@@ -1,6 +1,6 @@
-const assert = require('assert');
-const { calcATR } = require('../utils/atr');
-const { calcPositionSize } = require('../utils/risk');
+import assert from 'node:assert';
+import { calcATR } from '../utils/atr.js';
+import { calcPositionSize } from '../utils/risk.js';
 const tests = [];
 function test(name, fn) {
     tests.push({
