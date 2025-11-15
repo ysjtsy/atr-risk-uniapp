@@ -1,13 +1,17 @@
 {
-	"name": "atr-risk-miniapp",
-	"version": "0.1.0",
-	"description": "",
-	"main": "main.js",
-	"scripts": {
-		"test": "node tests/risk.test.js"
-	},
-	"author": "",
-	"dependencies": {},
-	"license": "[object Object]",
-	"private": true
+  "name": "atr-risk-uniapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "uni",
+    "build": "uni build",
+    "test": "node tests/risk.test.js"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-app": "^3.0.0",
+    "@dcloudio/uni-app-plus": "^3.0.0",
+    "@dcloudio/uni-h5": "^3.0.0",
+    "@dcloudio/vite-plugin-uni": "^4.0.0",
+    "vite": "^4.5.0"
+  }
 }
