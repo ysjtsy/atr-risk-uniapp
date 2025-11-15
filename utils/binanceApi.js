@@ -1,6 +1,7 @@
 // utils/binanceApi.js
+
 // 获取现货 K 线（用于 ATR）
-function fetchCandlesFromBinance(symbol, interval, limit = 200) {
+export function fetchCandlesFromBinance(symbol, interval, limit = 200) {
     return new Promise((resolve, reject) => {
         uni.request({
             url: 'https://api.binance.com/api/v3/klines',
@@ -28,7 +29,7 @@ function fetchCandlesFromBinance(symbol, interval, limit = 200) {
 }
 
 // 获取现货最新价
-function fetchSpotPrice(symbol) {
+export function fetchSpotPrice(symbol) {
     return new Promise((resolve, reject) => {
         uni.request({
             url: 'https://api.binance.com/api/v3/ticker/price',
@@ -49,7 +50,7 @@ function fetchSpotPrice(symbol) {
 }
 
 // 获取 U 本位合约最新价
-function fetchFuturesPrice(symbol) {
+export function fetchFuturesPrice(symbol) {
     return new Promise((resolve, reject) => {
         uni.request({
             url: 'https://fapi.binance.com/fapi/v1/ticker/price',
@@ -68,8 +69,3 @@ function fetchFuturesPrice(symbol) {
         });
     });
 }
-module.exports = {
-    fetchCandlesFromBinance,
-    fetchSpotPrice,
-    fetchFuturesPrice
-};

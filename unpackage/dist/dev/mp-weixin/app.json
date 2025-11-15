@@ -3,11 +3,11 @@
     "pages/index/index",
     "pages/logs/logs"
   ],
-  "subPackages": [],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Weixin",
-    "navigationBarBackgroundColor": "#ffffff"
+    "navigationBarTitleText": "ATR 风险计算",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f5f5"
   },
   "permission": {
     "scope.userLocation": {

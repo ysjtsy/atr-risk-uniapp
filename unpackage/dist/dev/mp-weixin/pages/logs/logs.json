@@ -1,3 +1,6 @@
 {
+  "navigationBarTitleText": "运行日志",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
   "usingComponents": {}
 }

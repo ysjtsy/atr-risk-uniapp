@@ -1,1 +1,1 @@
-<view class="section"><view class="label">{{label}}</view><block wx:if="{{subLabel}}"><view class="sub-label">{{''+subLabel+''}}</view></block><slot></slot></view>
+<view class="section"><view class="label">{{a}}</view><view wx:if="{{b}}" class="sub-label">{{c}}</view><slot></slot></view>

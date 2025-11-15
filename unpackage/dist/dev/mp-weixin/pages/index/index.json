@@ -1,10 +1,10 @@
 {
+  "navigationBarTitleText": "ATR 风险计算",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
   "usingComponents": {
-    "UiSection": "/components/ui-section/ui-section",
-    "UiButton": "/components/ui-button/ui-button",
-    "UiResultCard": "/components/ui-result-card/ui-result-card",
-    "ui-section": "/components/ui-section/ui-section",
-    "ui-button": "/components/ui-button/ui-button",
-    "ui-result-card": "/components/ui-result-card/ui-result-card"
+    "ui-section": "../../components/ui-section/ui-section",
+    "ui-button": "../../components/ui-button/ui-button",
+    "ui-result-card": "../../components/ui-result-card/ui-result-card"
   }
 }
