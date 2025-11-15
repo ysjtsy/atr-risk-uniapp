@@ -1,0 +1,76 @@
+开始转换……
+小程序路径:  /Users/quanshunzhi/WeChatProjects/atr-risk-miniapp
+搜索到49个文件(含目录)，耗时：7ms
+
+开始分析文件
+分析文件信息完成，共18组数据
+开始转换文件组为vue文件
+转换进度: 1 / 36   fileKey：app
+转换进度: 2 / 36   fileKey：components/ui-button/ui-button
+转换进度: 3 / 36   fileKey：components/ui-result-card/ui-result-card
+转换进度: 4 / 36   fileKey：components/ui-section/ui-section
+转换进度: 5 / 36   fileKey：config/trading
+转换进度: 6 / 36   fileKey：package
+转换进度: 7 / 36   fileKey：pages/index/index
+转换进度: 8 / 36   fileKey：pages/logs/logs
+转换进度: 9 / 36   fileKey：project.config
+转换进度: 10 / 36   fileKey：project.private.config
+转换进度: 11 / 36   fileKey：sitemap
+转换进度: 12 / 36   fileKey：styles/base
+转换进度: 13 / 36   fileKey：styles/variables
+转换进度: 14 / 36   fileKey：tests/risk.test
+转换进度: 15 / 36   fileKey：utils/atr
+转换进度: 16 / 36   fileKey：utils/binanceApi
+转换进度: 17 / 36   fileKey：utils/risk
+转换进度: 18 / 36   fileKey：utils/util
+开始二次遍历及生成vue文件
+转换进度: 19 / 36   fileKey：app
+转换进度: 20 / 36   fileKey：components/ui-button/ui-button
+转换进度: 21 / 36   fileKey：components/ui-result-card/ui-result-card
+转换进度: 22 / 36   fileKey：components/ui-section/ui-section
+转换进度: 23 / 36   fileKey：config/trading
+转换进度: 24 / 36   fileKey：package
+转换进度: 25 / 36   fileKey：pages/index/index
+转换进度: 26 / 36   fileKey：pages/logs/logs
+转换进度: 27 / 36   fileKey：project.config
+转换进度: 28 / 36   fileKey：project.private.config
+转换进度: 29 / 36   fileKey：sitemap
+转换进度: 30 / 36   fileKey：styles/base
+转换进度: 31 / 36   fileKey：styles/variables
+转换进度: 32 / 36   fileKey：tests/risk.test
+转换进度: 33 / 36   fileKey：utils/atr
+转换进度: 34 / 36   fileKey：utils/binanceApi
+转换进度: 35 / 36   fileKey：utils/risk
+转换进度: 36 / 36   fileKey：utils/util
+write pages.json success!
+write manifest.json success!
+write main.js success!
+write package.json success!
+
+
+统计信息：
+
+Component数量: 3
+Page数量: 2
+支付api数量: 0
+登录api数量: 1
+chooseMedia数量: 0
+getLocation数量: 0
+getRelationNodes数量: 0
+<ad/>数量: 0
+<map/>数量: 0
+<video/>数量: 0
+Vant组件: ， 数量：0
+
+项目转换完成！
+用时: 0.864s
+工具版本：v2.2.6
+在该小程序项目的同级目录可以看到_uni结尾的项目，即是转换好的uniapp项目，相关日志在该目录里。
+
+使用说明：
+    1.因各种原因，本工具并非100%完美转换！部分语法仍需人工处理！
+    2.工具转换原理及说明文档参考：https://l4rz4zwpx7.k.topthink.com/@kmrvzg72lx/
+    3.如遇运行报错，请添加QQ群(五群：536178289)带图反馈或https://github.com/zhangdaren/miniprogram-to-uniapp提交Issue！
+    4.转换后请查阅_uni目录或_uni-cli目录里的 README.md 和 transform.log
+
+

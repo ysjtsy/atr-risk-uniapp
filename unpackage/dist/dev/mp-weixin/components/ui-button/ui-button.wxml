@@ -1,0 +1,1 @@
+<view><button class="btn" loading="{{loading}}" disabled="{{disabled}}" data-event-opts="{{[['tap',[['onTap',['$event']]]]]}}" bindtap="__e">{{''+text+''}}</button></view>

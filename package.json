@@ -1,0 +1,13 @@
+{
+	"name": "atr-risk-miniapp",
+	"version": "0.1.0",
+	"description": "",
+	"main": "main.js",
+	"scripts": {
+		"test": "node tests/risk.test.js"
+	},
+	"author": "",
+	"dependencies": {},
+	"license": "[object Object]",
+	"private": true
+}

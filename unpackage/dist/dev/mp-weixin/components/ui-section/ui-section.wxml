@@ -1,0 +1,1 @@
+<view class="section"><view class="label">{{label}}</view><block wx:if="{{subLabel}}"><view class="sub-label">{{''+subLabel+''}}</view></block><slot></slot></view>
