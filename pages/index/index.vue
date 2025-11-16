@@ -77,7 +77,7 @@
         </UiSection>
 
         <!-- 计算按钮 -->
-        <UiButton text="计算 ATR、止损与仓位建议" :loading="loading" @tap.native="onCalcTap" />
+        <UiButton text="计算 ATR、止损与仓位建议" :loading="loading" @tap="onCalcTap" />
 
         <!-- 结果卡片：交易计划 -->
         <UiResultCard
@@ -103,7 +103,10 @@
     </view>
 </template>
 
-<script>
+<script setup>
+import { reactive, toRefs } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+
 import UiSection from '@/components/ui-section/ui-section.vue';
 import UiButton from '@/components/ui-button/ui-button.vue';
 import UiResultCard from '@/components/ui-result-card/ui-result-card.vue';
@@ -113,241 +116,254 @@ import { fetchCandlesFromBinance, fetchSpotPrice, fetchFuturesPrice } from '@/ut
 import { SYMBOL_OPTIONS, INTERVAL_OPTIONS } from '@/config/trading.js';
 import { calcPositionSize } from '@/utils/risk.js';
 
-export default {
-    components: {
-        UiSection,
-        UiButton,
-        UiResultCard
-    },
-    data() {
-        return {
-            // ▼ 交易对列表 & 当前选择
-            symbolOptions: SYMBOL_OPTIONS,
-            symbol: 'BTCUSDT',
+const state = reactive({
+    // ▼ 交易对列表 & 当前选择
+    symbolOptions: SYMBOL_OPTIONS,
+    symbol: 'BTCUSDT',
 
-            // ▼ K线周期列表（用于 ATR）
-            intervalOptions: INTERVAL_OPTIONS,
-            interval: '1h',
+    // ▼ K线周期列表（用于 ATR）
+    intervalOptions: INTERVAL_OPTIONS,
+    interval: '1h',
 
-            // ▼ ATR 输入
-            atrPeriodInput: '14',
-            atrMultInput: '1.5',
+    // ▼ ATR 输入
+    atrPeriodInput: '14',
+    atrMultInput: '1.5',
 
-            // ▼ 风控输入
-            equityInput: '',
-            riskPercentInput: '',
-            leverageInput: '',
+    // ▼ 风控输入
+    equityInput: '',
+    riskPercentInput: '',
+    leverageInput: '',
 
-            // ▼ 开仓 & 方向
-            entryPriceInput: '',
-            directionOptions: ['多单', '空单'],
-            direction: 'long',
+    // ▼ 开仓 & 方向
+    entryPriceInput: '',
+    directionOptions: ['多单', '空单'],
+    direction: 'long',
 
-            // ▼ 最新价格
-            spotPrice: null,
-            futuresPrice: null,
-            priceDiff: null,
+    // ▼ 最新价格
+    spotPrice: null,
+    futuresPrice: null,
+    priceDiff: null,
 
-            // ▼ 计算结果
-            loading: false,
-            atr: null,
-            stopLossPrice: null,
-            error: '',
-            rrRatio: null,
+    // ▼ 计算结果
+    loading: false,
+    atr: null,
+    stopLossPrice: null,
+    error: '',
+    rrRatio: null,
 
-            riskAmount: null,
-            stopDistance: null,
-            positionNotional: null,
-            positionQty: null
-        };
-    },
-    onLoad() {
-        this.refreshPrices();
-    },
-    methods: {
-        setResultState(overrides = {}) {
-            Object.assign(this, {
-                loading: false,
-                error: '',
-                atr: null,
-                stopLossPrice: null,
-                riskAmount: null,
-                stopDistance: null,
-                positionNotional: null,
-                positionQty: null,
-                rrRatio: null,
-                ...overrides
-            });
-        },
+    riskAmount: null,
+    stopDistance: null,
+    positionNotional: null,
+    positionQty: null
+});
 
-        // ====== 下拉选择 ======
-        onSymbolSelect(e) {
-            const idx = Number(e.detail.value);
-            const selected = this.symbolOptions[idx];
-            if (!selected) {
-                return;
-            }
-            this.symbol = selected;
-            this.refreshPrices();
-        },
+const setResultState = (overrides = {}) => {
+    Object.assign(state, {
+        loading: false,
+        error: '',
+        atr: null,
+        stopLossPrice: null,
+        riskAmount: null,
+        stopDistance: null,
+        positionNotional: null,
+        positionQty: null,
+        rrRatio: null,
+        ...overrides
+    });
+};
 
-        onIntervalSelect(e) {
-            const idx = Number(e.detail.value);
-            const selected = this.intervalOptions[idx];
-            if (selected) {
-                this.interval = selected;
-            }
-        },
+const setError = (msg) => {
+    setResultState({
+        error: msg
+    });
+};
 
-        onDirectionChange(e) {
-            const idx = Number(e.detail.value);
-            this.direction = idx === 0 ? 'long' : 'short';
-        },
+// ====== 下拉选择 ======
+const onSymbolSelect = (e) => {
+    const idx = Number(e.detail.value);
+    const selected = state.symbolOptions[idx];
+    if (!selected) {
+        return;
+    }
+    state.symbol = selected;
+    refreshPrices();
+};
 
-        // ====== 输入处理 ======
-        onAtrPeriodInput(e) {
-            this.atrPeriodInput = e.detail.value;
-        },
-        onAtrMultInput(e) {
-            this.atrMultInput = e.detail.value;
-        },
-        onEquityInput(e) {
-            this.equityInput = e.detail.value;
-        },
-        onRiskPercentInput(e) {
-            this.riskPercentInput = e.detail.value;
-        },
-        onLeverageInput(e) {
-            this.leverageInput = e.detail.value;
-        },
-        onEntryPriceInput(e) {
-            this.entryPriceInput = e.detail.value;
-        },
-
-        // ====== 刷新价格 ======
-        async refreshPrices() {
-            const { symbol } = this;
-
-            this.spotPrice = null;
-            this.futuresPrice = null;
-            this.priceDiff = null;
-
-            try {
-                const [spot, fut] = await Promise.all([fetchSpotPrice(symbol), fetchFuturesPrice(symbol)]);
-                const diff = fut - spot;
-                this.spotPrice = spot.toFixed(2);
-                this.futuresPrice = fut.toFixed(2);
-                this.priceDiff = diff.toFixed(2);
-                this.error = '';
-            } catch (err) {
-                console.error('刷新价格失败', err);
-                this.error = '刷新现货/合约价格失败（请检查合法域名配置）';
-            }
-        },
-
-        // ====== 核心逻辑：ATR + 止损 + 仓位 ======
-        async onCalcTap() {
-            const {
-                atrPeriodInput,
-                atrMultInput,
-                entryPriceInput,
-                direction,
-                symbol,
-                interval,
-                equityInput,
-                riskPercentInput,
-                leverageInput
-            } = this;
-
-            // 解析数字
-            const atrPeriod = parseInt(atrPeriodInput, 10);
-            const atrMult = parseFloat(atrMultInput);
-            const entryPrice = parseFloat(entryPriceInput);
-            const equity = parseFloat(equityInput);
-            const riskPercent = parseFloat(riskPercentInput);
-            const leverage = parseFloat(leverageInput);
-
-            // 基础校验：先保证 ATR 与止损能算
-            if (!entryPrice || entryPrice <= 0) {
-                this._error('开仓价无效，请输入开仓价');
-                return;
-            }
-            if (!atrPeriod || atrPeriod <= 0) {
-                this._error('ATR 周期无效，请输入大于 0 的整数');
-                return;
-            }
-            if (!atrMult || atrMult <= 0) {
-                this._error('ATR 倍数无效，请输入大于 0 的数字');
-                return;
-            }
-
-            this.setResultState({
-                loading: true
-            });
-
-            try {
-                const candles = await fetchCandlesFromBinance(symbol, interval, 200);
-                const atr = calcATR(candles, atrPeriod);
-                if (!atr) {
-                    this._error('K线数量不足，无法计算 ATR');
-                    return;
-                }
-
-                const stopLossPrice =
-                    direction === 'long'
-                        ? entryPrice - atrMult * atr
-                        : entryPrice + atrMult * atr;
-
-                const riskDistance =
-                    direction === 'long'
-                        ? entryPrice - stopLossPrice
-                        : stopLossPrice - entryPrice;
-
-                const rrText = `1 : ${atrMult.toFixed(2)}`;
-
-                const baseResult = {
-                    loading: false,
-                    atr: atr.toFixed(2),
-                    stopLossPrice: stopLossPrice.toFixed(2),
-                    stopDistance: riskDistance.toFixed(2),
-                    rrRatio: rrText
-                };
-
-                if (equity > 0 && riskPercent > 0 && leverage > 0) {
-                    const pos = calcPositionSize({
-                        equity,
-                        riskPercent,
-                        leverage,
-                        entryPrice,
-                        stopLossPrice
-                    });
-
-                    if (pos) {
-                        this.setResultState({
-                            ...baseResult,
-                            riskAmount: pos.riskAmount.toFixed(2),
-                            positionNotional: pos.finalNotional.toFixed(2),
-                            positionQty: pos.qty.toFixed(4)
-                        });
-                        return;
-                    }
-                }
-
-                this.setResultState(baseResult);
-            } catch (err) {
-                console.error('请求K线失败', err);
-                this._error('请求现货K线失败（请确认 api.binance.com 合法域名已配置）');
-            }
-        },
-
-        // ====== 通用错误处理 ======
-        _error(msg) {
-            this.setResultState({
-                error: msg
-            });
-        }
+const onIntervalSelect = (e) => {
+    const idx = Number(e.detail.value);
+    const selected = state.intervalOptions[idx];
+    if (selected) {
+        state.interval = selected;
     }
 };
+
+const onDirectionChange = (e) => {
+    const idx = Number(e.detail.value);
+    state.direction = idx === 0 ? 'long' : 'short';
+};
+
+// ====== 输入处理 ======
+const onAtrPeriodInput = (e) => {
+    state.atrPeriodInput = e.detail.value;
+};
+const onAtrMultInput = (e) => {
+    state.atrMultInput = e.detail.value;
+};
+const onEquityInput = (e) => {
+    state.equityInput = e.detail.value;
+};
+const onRiskPercentInput = (e) => {
+    state.riskPercentInput = e.detail.value;
+};
+const onLeverageInput = (e) => {
+    state.leverageInput = e.detail.value;
+};
+const onEntryPriceInput = (e) => {
+    state.entryPriceInput = e.detail.value;
+};
+
+// ====== 刷新价格 ======
+const refreshPrices = async () => {
+    const symbol = state.symbol;
+
+    state.spotPrice = null;
+    state.futuresPrice = null;
+    state.priceDiff = null;
+
+    try {
+        const [spot, fut] = await Promise.all([fetchSpotPrice(symbol), fetchFuturesPrice(symbol)]);
+        const diff = fut - spot;
+        state.spotPrice = spot.toFixed(2);
+        state.futuresPrice = fut.toFixed(2);
+        state.priceDiff = diff.toFixed(2);
+        state.error = '';
+    } catch (err) {
+        console.error('刷新价格失败', err);
+        state.error = '刷新现货/合约价格失败（请检查合法域名配置）';
+    }
+};
+
+// ====== 核心逻辑：ATR + 止损 + 仓位 ======
+const onCalcTap = async () => {
+    const {
+        atrPeriodInput,
+        atrMultInput,
+        entryPriceInput,
+        direction,
+        symbol,
+        interval,
+        equityInput,
+        riskPercentInput,
+        leverageInput
+    } = state;
+
+    // 解析数字
+    const atrPeriod = parseInt(atrPeriodInput, 10);
+    const atrMult = parseFloat(atrMultInput);
+    const entryPrice = parseFloat(entryPriceInput);
+    const equity = parseFloat(equityInput);
+    const riskPercent = parseFloat(riskPercentInput);
+    const leverage = parseFloat(leverageInput);
+
+    // 基础校验：先保证 ATR 与止损能算
+    if (!entryPrice || entryPrice <= 0) {
+        setError('开仓价无效，请输入开仓价');
+        return;
+    }
+    if (!atrPeriod || atrPeriod <= 0) {
+        setError('ATR 周期无效，请输入大于 0 的整数');
+        return;
+    }
+    if (!atrMult || atrMult <= 0) {
+        setError('ATR 倍数无效，请输入大于 0 的数字');
+        return;
+    }
+
+    setResultState({
+        loading: true
+    });
+
+    try {
+        const candles = await fetchCandlesFromBinance(symbol, interval, 200);
+        const atr = calcATR(candles, atrPeriod);
+        if (!atr) {
+            setError('K线数量不足，无法计算 ATR');
+            return;
+        }
+
+        const stopLossPrice =
+            direction === 'long' ? entryPrice - atrMult * atr : entryPrice + atrMult * atr;
+
+        const riskDistance =
+            direction === 'long' ? entryPrice - stopLossPrice : stopLossPrice - entryPrice;
+
+        const rrText = `1 : ${atrMult.toFixed(2)}`;
+
+        const baseResult = {
+            loading: false,
+            atr: atr.toFixed(2),
+            stopLossPrice: stopLossPrice.toFixed(2),
+            stopDistance: riskDistance.toFixed(2),
+            rrRatio: rrText
+        };
+
+        if (equity > 0 && riskPercent > 0 && leverage > 0) {
+            const pos = calcPositionSize({
+                equity,
+                riskPercent,
+                leverage,
+                entryPrice,
+                stopLossPrice
+            });
+
+            if (pos) {
+                setResultState({
+                    ...baseResult,
+                    riskAmount: pos.riskAmount.toFixed(2),
+                    positionNotional: pos.finalNotional.toFixed(2),
+                    positionQty: pos.qty.toFixed(4)
+                });
+                return;
+            }
+        }
+
+        setResultState(baseResult);
+    } catch (err) {
+        console.error('请求K线失败', err);
+        setError('请求现货K线失败（请确认 api.binance.com 合法域名已配置）');
+    }
+};
+
+onLoad(() => {
+    refreshPrices();
+});
+
+const {
+    symbolOptions,
+    symbol,
+    intervalOptions,
+    interval,
+    atrPeriodInput,
+    atrMultInput,
+    equityInput,
+    riskPercentInput,
+    leverageInput,
+    entryPriceInput,
+    directionOptions,
+    direction,
+    spotPrice,
+    futuresPrice,
+    priceDiff,
+    loading,
+    atr,
+    stopLossPrice,
+    error,
+    rrRatio,
+    riskAmount,
+    stopDistance,
+    positionNotional,
+    positionQty
+} = toRefs(state);
 </script>
 <style>
 /* 可以加一点页面级的小调整 */

@@ -11,28 +11,21 @@
     </view>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+
 import { formatTime } from '@/utils/util.js';
 
-export default {
-    data() {
-        return {
-            logs: [],
+const logs = ref([]);
 
-            log: {
-                date: ''
-            }
-        };
-    },
-    onLoad() {
-        const storedLogs = uni.getStorageSync('logs') || [];
-        this.logs = storedLogs.map((log) => ({
-            date: formatTime(new Date(log)),
-            timestamp: log
-        }));
-    },
-    methods: {}
-};
+onLoad(() => {
+    const storedLogs = uni.getStorageSync('logs') || [];
+    logs.value = storedLogs.map((log) => ({
+        date: formatTime(new Date(log)),
+        timestamp: log
+    }));
+});
 </script>
 <style>
 .logs-container {
