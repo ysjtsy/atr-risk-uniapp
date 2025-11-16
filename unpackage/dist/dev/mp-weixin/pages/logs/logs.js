@@ -1,38 +1,29 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const util = require("../../utils/util.js");
+const utils_util = require("../../utils/util.js");
 const _sfc_main = {
-  data() {
-    return {
-      logs: [],
-      log: {
-        date: ""
-      }
-    };
-  },
-  onLoad() {
-    this.setData({
-      logs: (common_vendor.index.getStorageSync("logs") || []).map((log) => {
-        return {
-          date: util.formatTime(new Date(log)),
-          timestamp: log
-        };
-      })
+  __name: "logs",
+  setup(__props) {
+    const logs = common_vendor.ref([]);
+    common_vendor.onLoad(() => {
+      const storedLogs = common_vendor.index.getStorageSync("logs") || [];
+      logs.value = storedLogs.map((log) => ({
+        date: utils_util.formatTime(new Date(log)),
+        timestamp: log
+      }));
     });
-  },
-  methods: {}
-};
-function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return {
-    a: common_vendor.f($data.logs, (log, index, i0) => {
+    return (_ctx, _cache) => {
       return {
-        a: common_vendor.t(index + 1),
-        b: common_vendor.t(log.date),
-        c: index
+        a: common_vendor.f(logs.value, (log, index, i0) => {
+          return {
+            a: common_vendor.t(index + 1),
+            b: common_vendor.t(log.date),
+            c: index
+          };
+        })
       };
-    })
-  };
-}
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
-wx.createPage(MiniProgramPage);
+    };
+  }
+};
+wx.createPage(_sfc_main);
 //# sourceMappingURL=../../../.sourcemap/mp-weixin/pages/logs/logs.js.map

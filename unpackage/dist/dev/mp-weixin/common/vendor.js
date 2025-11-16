@@ -755,6 +755,10 @@ function trigger(target, type, key, newValue, oldValue, oldTarget) {
   }
   resetScheduling();
 }
+function getDepFromReactive(object, key) {
+  var _a;
+  return (_a = targetMap.get(object)) == null ? void 0 : _a.get(key);
+}
 const isNonTrackableKeys = /* @__PURE__ */ makeMap(`__proto__,__v_isRef,__isVue`);
 const builtInSymbols = new Set(
   /* @__PURE__ */ Object.getOwnPropertyNames(Symbol).filter((key) => key !== "arguments" && key !== "caller").map((key) => Symbol[key]).filter(isSymbol)
@@ -1472,6 +1476,38 @@ const shallowUnwrapHandlers = {
 function proxyRefs(objectWithRefs) {
   return isReactive(objectWithRefs) ? objectWithRefs : new Proxy(objectWithRefs, shallowUnwrapHandlers);
 }
+function toRefs(object) {
+  if (!isProxy(object)) {
+    warn$2(`toRefs() expects a reactive object but received a plain one.`);
+  }
+  const ret = isArray(object) ? new Array(object.length) : {};
+  for (const key in object) {
+    ret[key] = propertyToRef(object, key);
+  }
+  return ret;
+}
+class ObjectRefImpl {
+  constructor(_object, _key, _defaultValue) {
+    this._object = _object;
+    this._key = _key;
+    this._defaultValue = _defaultValue;
+    this.__v_isRef = true;
+  }
+  get value() {
+    const val = this._object[this._key];
+    return val === void 0 ? this._defaultValue : val;
+  }
+  set value(newVal) {
+    this._object[this._key] = newVal;
+  }
+  get dep() {
+    return getDepFromReactive(toRaw(this._object), this._key);
+  }
+}
+function propertyToRef(source, key, defaultValue) {
+  const val = source[key];
+  return isRef(val) ? val : new ObjectRefImpl(source, key, defaultValue);
+}
 const stack = [];
 function pushWarningContext(vnode) {
   stack.push(vnode);
@@ -2097,47 +2133,6 @@ function setCurrentRenderingInstance(instance) {
   currentRenderingInstance = instance;
   instance && instance.type.__scopeId || null;
   return prev;
-}
-const COMPONENTS = "components";
-function resolveComponent(name, maybeSelfReference) {
-  return resolveAsset(COMPONENTS, name, true, maybeSelfReference) || name;
-}
-function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false) {
-  const instance = currentRenderingInstance || currentInstance;
-  if (instance) {
-    const Component2 = instance.type;
-    if (type === COMPONENTS) {
-      const selfName = getComponentName(
-        Component2,
-        false
-      );
-      if (selfName && (selfName === name || selfName === camelize(name) || selfName === capitalize(camelize(name)))) {
-        return Component2;
-      }
-    }
-    const res = (
-      // local registration
-      // check instance[type] first which is resolved for options API
-      resolve(instance[type] || Component2[type], name) || // global registration
-      resolve(instance.appContext[type], name)
-    );
-    if (!res && maybeSelfReference) {
-      return Component2;
-    }
-    if (warnMissing && !res) {
-      const extra = type === COMPONENTS ? `
-If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement.` : ``;
-      warn$1(`Failed to resolve ${type.slice(0, -1)}: ${name}${extra}`);
-    }
-    return res;
-  } else {
-    warn$1(
-      `resolve${capitalize(type.slice(0, -1))} can only be used in render() or setup().`
-    );
-  }
-}
-function resolve(registry, name) {
-  return registry && (registry[name] || registry[camelize(name)] || registry[capitalize(camelize(name))]);
 }
 const INITIAL_WATCHER_VALUE = {};
 function watch(source, cb, options) {
@@ -5497,8 +5492,8 @@ function promisify$1(name, fn) {
     if (hasCallback(args)) {
       return wrapperReturnValue(name, invokeApi(name, fn, extend({}, args), rest));
     }
-    return wrapperReturnValue(name, handlePromise(new Promise((resolve2, reject) => {
-      invokeApi(name, fn, extend({}, args, { success: resolve2, fail: reject }), rest);
+    return wrapperReturnValue(name, handlePromise(new Promise((resolve, reject) => {
+      invokeApi(name, fn, extend({}, args, { success: resolve, fail: reject }), rest);
     })));
   };
 }
@@ -5819,7 +5814,7 @@ function invokeGetPushCidCallbacks(cid2, errMsg) {
   getPushCidCallbacks.length = 0;
 }
 const API_GET_PUSH_CLIENT_ID = "getPushClientId";
-const getPushClientId = defineAsyncApi(API_GET_PUSH_CLIENT_ID, (_, { resolve: resolve2, reject }) => {
+const getPushClientId = defineAsyncApi(API_GET_PUSH_CLIENT_ID, (_, { resolve, reject }) => {
   Promise.resolve().then(() => {
     if (typeof enabled === "undefined") {
       enabled = false;
@@ -5828,7 +5823,7 @@ const getPushClientId = defineAsyncApi(API_GET_PUSH_CLIENT_ID, (_, { resolve: re
     }
     getPushCidCallbacks.push((cid2, errMsg) => {
       if (cid2) {
-        resolve2({ cid: cid2 });
+        resolve({ cid: cid2 });
       } else {
         reject(errMsg);
       }
@@ -5897,9 +5892,9 @@ function promisify(name, api) {
     if (isFunction(options.success) || isFunction(options.fail) || isFunction(options.complete)) {
       return wrapperReturnValue(name, invokeApi(name, api, extend({}, options), rest));
     }
-    return wrapperReturnValue(name, handlePromise(new Promise((resolve2, reject) => {
+    return wrapperReturnValue(name, handlePromise(new Promise((resolve, reject) => {
       invokeApi(name, api, extend({}, options, {
-        success: resolve2,
+        success: resolve,
         fail: reject
       }), rest);
     })));
@@ -6506,13 +6501,13 @@ function initRuntimeSocket(hosts, port, id) {
 }
 const SOCKET_TIMEOUT = 500;
 function tryConnectSocket(host2, port, id) {
-  return new Promise((resolve2, reject) => {
+  return new Promise((resolve, reject) => {
     const socket = index.connectSocket({
       url: `ws://${host2}:${port}/${id}`,
       multiple: true,
       // 支付宝小程序 是否开启多实例
       fail() {
-        resolve2(null);
+        resolve(null);
       }
     });
     const timer = setTimeout(() => {
@@ -6520,19 +6515,19 @@ function tryConnectSocket(host2, port, id) {
         code: 1006,
         reason: "connect timeout"
       });
-      resolve2(null);
+      resolve(null);
     }, SOCKET_TIMEOUT);
     socket.onOpen((e2) => {
       clearTimeout(timer);
-      resolve2(socket);
+      resolve(socket);
     });
     socket.onClose((e2) => {
       clearTimeout(timer);
-      resolve2(null);
+      resolve(null);
     });
     socket.onError((e2) => {
       clearTimeout(timer);
-      resolve2(null);
+      resolve(null);
     });
   });
 }
@@ -7001,7 +6996,7 @@ function isConsoleWritable() {
 function initRuntimeSocketService() {
   const hosts = "127.0.0.1,192.168.1.7";
   const port = "8090";
-  const id = "mp-weixin_Sm6w2f";
+  const id = "mp-weixin_gbAf0o";
   const lazy = typeof swan !== "undefined";
   let restoreError = lazy ? () => {
   } : initOnError();
@@ -7955,6 +7950,11 @@ const onLaunch = /* @__PURE__ */ createLifeCycleHook(
   1
   /* HookFlags.APP */
 );
+const onLoad = /* @__PURE__ */ createLifeCycleHook(
+  ON_LOAD,
+  2
+  /* HookFlags.PAGE */
+);
 exports._export_sfc = _export_sfc;
 exports.createSSRApp = createSSRApp;
 exports.e = e;
@@ -7963,7 +7963,11 @@ exports.index = index;
 exports.n = n;
 exports.o = o;
 exports.onLaunch = onLaunch;
+exports.onLoad = onLoad;
 exports.p = p;
-exports.resolveComponent = resolveComponent;
+exports.reactive = reactive;
+exports.ref = ref;
 exports.t = t;
+exports.toRefs = toRefs;
+exports.unref = unref;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/common/vendor.js.map
