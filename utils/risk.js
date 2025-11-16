@@ -49,6 +49,7 @@ export function calcPositionSize({ equity, riskPercent, leverage, entryPrice, st
     const finalNotional = Math.min(notionalByRisk, maxNotionalByLev);
 
     const qty = finalNotional / entryPrice;
+    const actualMargin = finalNotional / leverage;
 
     return {
         riskAmount,        // 允许亏损金额
@@ -56,6 +57,7 @@ export function calcPositionSize({ equity, riskPercent, leverage, entryPrice, st
         notionalByRisk,    // 风控导出的名义仓位
         maxNotionalByLev,  // 杠杆允许的上限
         finalNotional,     // 实际使用的名义仓位
-        qty                // 建议数量（币）
+        qty,               // 建议数量（币）
+        actualMargin       // 实际占用保证金
     };
 }

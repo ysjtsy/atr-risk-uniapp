@@ -12,8 +12,8 @@
 </template>
 
 <script>
-// logs.js
-const util = require('../../utils/util.js');
+import { formatTime } from '@/utils/util.js';
+
 export default {
     data() {
         return {
@@ -25,14 +25,11 @@ export default {
         };
     },
     onLoad() {
-        this.setData({
-            logs: (uni.getStorageSync('logs') || []).map((log) => {
-                return {
-                    date: util.formatTime(new Date(log)),
-                    timestamp: log
-                };
-            })
-        });
+        const storedLogs = uni.getStorageSync('logs') || [];
+        this.logs = storedLogs.map((log) => ({
+            date: formatTime(new Date(log)),
+            timestamp: log
+        }));
     },
     methods: {}
 };
