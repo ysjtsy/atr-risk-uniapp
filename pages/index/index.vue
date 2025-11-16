@@ -77,7 +77,7 @@
         </UiSection>
 
         <!-- 计算按钮 -->
-        <UiButton text="计算 ATR、止损与仓位建议" :loading="loading" @tap.native="onCalcTap" />
+        <UiButton text="计算 ATR、止损与仓位建议" :loading="loading" @tap="onCalcTap" />
 
         <!-- 结果卡片：交易计划 -->
         <UiResultCard

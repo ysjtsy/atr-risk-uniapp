@@ -28,6 +28,7 @@ export function fetchCandlesFromBinance(symbol, interval, limit = 200) {
     });
 }
 
+
 // 获取现货最新价
 export function fetchSpotPrice(symbol) {
     return new Promise((resolve, reject) => {

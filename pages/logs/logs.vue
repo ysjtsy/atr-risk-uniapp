@@ -17,11 +17,7 @@ import { formatTime } from '@/utils/util.js';
 export default {
     data() {
         return {
-            logs: [],
-
-            log: {
-                date: ''
-            }
+            logs: []
         };
     },
     onLoad() {
