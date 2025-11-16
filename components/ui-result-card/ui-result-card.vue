@@ -44,6 +44,11 @@
                     <text class="result-value">{{ riskAmount }}</text>
                 </view>
 
+                <view class="result-row" v-if="takeProfitAmount">
+                    <text class="result-label">建议止盈金额</text>
+                    <text class="result-value">{{ takeProfitAmount }}</text>
+                </view>
+
                 <view class="result-row">
                     <text class="result-label">RR</text>
                     <text class="result-value">{{ rrRatio }}</text>
@@ -57,6 +62,11 @@
                 <view class="result-row">
                     <text class="result-label">名义仓位</text>
                     <text class="result-value">{{ positionNotional }}</text>
+                </view>
+
+                <view class="result-row" v-if="actualMargin">
+                    <text class="result-label">实际保证金</text>
+                    <text class="result-value">{{ actualMargin }}</text>
                 </view>
 
                 <view class="result-row">
@@ -93,7 +103,9 @@ export default {
         stopDistance: String,
         positionNotional: String,
         positionQty: String,
-        rrRatio: String
+        rrRatio: String,
+        takeProfitAmount: String,
+        actualMargin: String
     },
     methods: {},
     created: function () {}
