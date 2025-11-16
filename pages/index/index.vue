@@ -309,14 +309,16 @@ export default {
                         ? entryPrice - stopLossPrice
                         : stopLossPrice - entryPrice;
 
-                const rrText = `1 : ${atrMult.toFixed(2)}`;
+                const rrRatioText = `1 : ${atrMult.toFixed(2)}`;
 
                 const baseResult = {
                     loading: false,
                     atr: atr.toFixed(2),
                     stopLossPrice: stopLossPrice.toFixed(2),
                     stopDistance: riskDistance.toFixed(2),
-                    rrRatio: rrText
+                    rrRatio: rrRatioText,
+                    takeProfitAmount: null,
+                    actualMargin: null
                 };
 
                 if (equity > 0 && riskPercent > 0 && leverage > 0) {
